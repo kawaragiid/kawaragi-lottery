@@ -4,13 +4,32 @@ import React, { useState } from "react";
 import { supabase } from "../lib/supabase";
 import { useRouter } from "next/navigation";
 
+// Pindahkan FieldWrapper ke luar agar tidak menyebabkan remount saat re-render
+const FieldWrapper = ({ label, children, icon }) => (
+  <div className="space-y-2">
+    <label className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-gray-500 font-semibold ml-1">
+      {icon} {label}
+    </label>
+    {children}
+  </div>
+);
+
 export default function FormRegistration() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [idStatus, setIdStatus] = useState({ available: null, loading: false });
+
+  // Gunakan state untuk input agar menjadi controlled component
+  const [formData, setFormData] = useState({
+    kawaragi_id: "",
+    full_name: "",
+    email: "",
+    whatsapp: "",
+  });
+
   const router = useRouter();
 
-  // 1. FUNGSI CEK ID (Kembali ke Supabase)
+  // 1. FUNGSI CEK ID
   const checkIdAvailability = async (id) => {
     const cleanId = id.toLowerCase().trim();
     if (cleanId.length < 3) {
@@ -30,9 +49,33 @@ export default function FormRegistration() {
     }
   };
 
-  // 2. FUNGSI KIRIM DATA (Kembali ke Supabase)
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+
+    // Khusus WhatsApp, hanya izinkan angka
+    if (name === "whatsapp") {
+      const numericValue = value.replace(/\D/g, "");
+      setFormData((prev) => ({ ...prev, [name]: numericValue }));
+      return;
+    }
+
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    if (name === "kawaragi_id") {
+      checkIdAvailability(value);
+    }
+  };
+
+  // 2. FUNGSI KIRIM DATA
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validasi WhatsApp: Harus mulai dengan 0 dan panjang 11-13
+    const waRegex = /^0\d{10,12}$/;
+    if (!waRegex.test(formData.whatsapp)) {
+      setMessage("Nomor WhatsApp harus diawali angka 0 dan terdiri dari 11-13 digit!");
+      return;
+    }
 
     if (idStatus.available === false) {
       setMessage("Gagal: Username ini sudah digunakan!");
@@ -42,12 +85,11 @@ export default function FormRegistration() {
     setLoading(true);
     setMessage("");
 
-    const formData = new FormData(e.currentTarget);
     const payload = {
-      full_name: formData.get("full_name"),
-      email: formData.get("email"),
-      whatsapp: formData.get("whatsapp"),
-      kawaragi_id: formData.get("kawaragi_id").toLowerCase().trim(),
+      full_name: formData.full_name,
+      email: formData.email,
+      whatsapp: formData.whatsapp,
+      kawaragi_id: formData.kawaragi_id.toLowerCase().trim(),
     };
 
     const { error } = await supabase.from("registrations").insert([payload]);
@@ -68,15 +110,6 @@ export default function FormRegistration() {
     }
     setLoading(false);
   };
-
-  const FieldWrapper = ({ label, children, icon }) => (
-    <div className="space-y-2">
-      <label className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-gray-500 font-semibold ml-1">
-        {icon} {label}
-      </label>
-      {children}
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center p-6 font-sans">
@@ -121,12 +154,13 @@ export default function FormRegistration() {
                   name="kawaragi_id"
                   type="text"
                   required
-                  onChange={(e) => checkIdAvailability(e.target.value)}
+                  value={formData.kawaragi_id}
+                  onChange={handleInputChange}
                   autoComplete="off"
                   className={`w-full bg-white/2 border ${
                     idStatus.available === false ? "border-red-500/40" : idStatus.available === true ? "border-green-500/40" : "border-white/10"
                   } rounded-2xl px-5 py-4 text-white placeholder:text-gray-800 focus:outline-none focus:border-pink-500/50 transition-all text-sm`}
-                  placeholder="Contoh: Pacar Soya, Pacar Hinata"
+                  placeholder="Contoh: kirei_valentine"
                 />
                 <div className="absolute right-5 top-1/2 -translate-y-1/2 text-[9px] font-bold tracking-widest uppercase">
                   {idStatus.loading && <span className="text-gray-600 animate-pulse">Checking...</span>}
@@ -155,6 +189,8 @@ export default function FormRegistration() {
                 name="full_name"
                 type="text"
                 required
+                value={formData.full_name}
+                onChange={handleInputChange}
                 autoComplete="off"
                 className="w-full bg-white/2 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-gray-800 focus:border-pink-500/50 outline-none transition-all text-sm"
                 placeholder="Nama sesuai identitas"
@@ -174,6 +210,8 @@ export default function FormRegistration() {
                   name="email"
                   type="email"
                   required
+                  value={formData.email}
+                  onChange={handleInputChange}
                   autoComplete="off"
                   className="w-full bg-white/2 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-gray-800 focus:border-pink-500/50 outline-none transition-all text-sm"
                   placeholder="email@kamu.com"
@@ -188,14 +226,20 @@ export default function FormRegistration() {
                   </svg>
                 }
               >
-                <input
-                  name="whatsapp"
-                  type="tel"
-                  required
-                  autoComplete="off"
-                  className="w-full bg-white/2 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-gray-800 focus:border-pink-500/50 outline-none transition-all text-sm"
-                  placeholder="0812xxxxxxxx"
-                />
+                <div className="space-y-1">
+                  <input
+                    name="whatsapp"
+                    type="tel"
+                    required
+                    value={formData.whatsapp}
+                    onChange={handleInputChange}
+                    maxLength={13}
+                    autoComplete="off"
+                    className="w-full bg-white/2 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-gray-800 focus:border-pink-500/50 outline-none transition-all text-sm"
+                    placeholder="0812xxxxxxxx"
+                  />
+                  <p className="text-[9px] text-gray-600 italic px-1">Gunakan format angka saja (contoh: 081234567890)</p>
+                </div>
               </FieldWrapper>
             </div>
 
@@ -216,7 +260,7 @@ export default function FormRegistration() {
             {message && (
               <div
                 className={`flex items-center justify-center p-4 rounded-2xl border ${
-                  message.includes("Gagal") || message.includes("kesalahan") ? "bg-red-500/5 border-red-500/20 text-red-400" : "bg-pink-500/5 border-pink-500/20 text-pink-400"
+                  message.includes("Gagal") || message.includes("kesalahan") || message.includes("digit") ? "bg-red-500/5 border-red-500/20 text-red-400" : "bg-pink-500/5 border-pink-500/20 text-pink-400"
                 }`}
               >
                 <span className="text-[10px] font-bold tracking-wider uppercase text-center">{message}</span>
