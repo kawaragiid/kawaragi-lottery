@@ -117,7 +117,7 @@ export default function AdminDashboard() {
   // State Keamanan
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
-  const ADMIN_PASSWORD = "keigo"; // <--- Ganti Password Kamu Di Sini
+  const ADMIN_PASSWORD = "keigosianakpolos"; // <--- Ganti Password Kamu Di Sini
 
   const fetchParticipants = async () => {
     setLoading(true);
