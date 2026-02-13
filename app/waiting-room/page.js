@@ -12,7 +12,7 @@ export default function WaitingRoom() {
   });
 
   // Target waktu undian: 20 Februari 2026 19:00:00
-  const targetDate = useMemo(() => new Date("February 20, 2026 19:00:00").getTime(), []);
+  const targetDate = useMemo(() => new Date("February 15, 2026 19:00:00").getTime(), []);
 
   useEffect(() => {
     const timer = setInterval(() => {
