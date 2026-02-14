@@ -3,7 +3,7 @@ import { supabase } from "../../lib/supabase";
 import { Train, RefreshCw, Eye, EyeOff, Trophy, Zap, ChevronDown, ChevronUp, Music, Upload } from "lucide-react";
 
 // Durasi total animasi dalam milidetik (10 detik)
-const RAFFLE_DURATION = 10000;
+const RAFFLE_DURATION = 40000;
 
 const ShinkansenDraw = ({ participants, onWinnerFound, isSpinning, setIsSpinning, audioRef }) => {
   const [offset, setOffset] = useState(0);
