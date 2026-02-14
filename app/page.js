@@ -95,7 +95,7 @@ const App = () => {
                 <div className="flex items-start gap-3">
                   <Ticket className="text-indigo-400 shrink-0 mt-1" size={20} />
                   <div>
-                    <p className="text-white font-semibold italic uppercase tracking-tighter">Total 1 Tiket Gratis</p>
+                    <p className="text-white font-semibold italic uppercase tracking-tighter">Total 3 Tiket Gratis</p>
                     <p className="text-gray-400 text-sm">Slot terbatas khusus untuk Fans Kawaragi Indonesia.</p>
                   </div>
                 </div>
